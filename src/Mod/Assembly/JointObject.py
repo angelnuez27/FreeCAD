@@ -363,7 +363,7 @@ class Joint:
                 "Limits",
                 QT_TRANSLATE_NOOP(
                     "App::Property",
-                    "Enable the minimum length of the joint.",
+                    "Enable the maximum angle limit of the joint.",
                 ),
                 locked=True,
             )
