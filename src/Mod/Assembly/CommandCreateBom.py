@@ -363,12 +363,15 @@ class TaskAssemblyCreateBom(QtCore.QObject):
 
     def showHelpDialog(self):
         help_dialog = QtWidgets.QDialog(self.form)
-        help_dialog.setWindowFlags(QtCore.Qt.Popup)
+        # Use a tool window instead of a popup so it can be resized and scrolled
+        help_dialog.setWindowFlags(QtCore.Qt.Tool)
         help_dialog.setWindowModality(QtCore.Qt.NonModal)
         help_dialog.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+        help_dialog.setWindowTitle(translate("Assembly", "Help"))
 
-        layout = QtWidgets.QVBoxLayout()
-        layout.setContentsMargins(10, 10, 10, 10)
+        # Build the help content in a separate widget
+        content_layout = QtWidgets.QVBoxLayout()
+        content_layout.setContentsMargins(10, 10, 10, 10)
 
         options_title = QtWidgets.QLabel("<b>" + translate("Assembly", "Options") + "</b>")
         options_text = QtWidgets.QLabel(
@@ -426,15 +429,36 @@ class TaskAssemblyCreateBom(QtCore.QObject):
         columns_text.setWordWrap(True)
         export_text.setWordWrap(True)
 
-        layout.addWidget(options_title)
-        layout.addWidget(options_text)
-        layout.addWidget(columns_title)
-        layout.addWidget(columns_text)
-        layout.addWidget(export_title)
-        layout.addWidget(export_text)
+        content_layout.addWidget(options_title)
+        content_layout.addWidget(options_text)
+        content_layout.addWidget(columns_title)
+        content_layout.addWidget(columns_text)
+        content_layout.addWidget(export_title)
+        content_layout.addWidget(export_text)
 
-        help_dialog.setLayout(layout)
-        help_dialog.setFixedWidth(500)
+        # Put the content inside a scroll area to avoid clipping by screen height
+        content_widget = QtWidgets.QWidget()
+        content_widget.setLayout(content_layout)
+
+        scroll = QtWidgets.QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QtWidgets.QFrame.NoFrame)
+        scroll.setWidget(content_widget)
+
+        outer_layout = QtWidgets.QVBoxLayout()
+        outer_layout.addWidget(scroll)
+        help_dialog.setLayout(outer_layout)
+
+        # Set a sensible initial size based on available screen geometry
+        screen = QtWidgets.QApplication.primaryScreen()
+        if screen:
+            avail = screen.availableGeometry()
+            width = min(700, int(avail.width() * 0.5))
+            height = min(600, int(avail.height() * 0.6))
+        else:
+            width, height = 700, 500
+        help_dialog.resize(width, height)
+        help_dialog.setSizeGripEnabled(True)
 
         help_dialog.show()
 
